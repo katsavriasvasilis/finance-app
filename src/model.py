@@ -1,114 +1,88 @@
 """
-Data layer: SQLite schema και CRUD για categories & transactions
+Model layer: Database access with SQLite3.
 """
 import sqlite3
-from datetime import date
+from datetime import datetime
 
 class Database:
-    def __init__(self, db_path="finance.db"):
+    def __init__(self, db_path: str = "finance.db"):
+        # Συνδέεται με SQLite database (creates file if not exists)
         self.conn = sqlite3.connect(db_path)
         self.conn.row_factory = sqlite3.Row
-        self.create_tables()
+        self._create_tables()
 
-    def create_tables(self):
-        cursor = self.conn.cursor()
-        # Πίνακας κατηγοριών
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS categories (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            type TEXT CHECK(type IN ('income','expense')) NOT NULL,
-            is_monthly_template INTEGER NOT NULL DEFAULT 0
+    def _create_tables(self):
+        # Δημιουργεί πίνακες categories και transactions αν δεν υπάρχουν
+        self.conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS categories (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                type TEXT NOT NULL,
+                is_monthly_template INTEGER NOT NULL
+            );
+            """
         )
-        """)
-        # Πίνακας συναλλαγών
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS transactions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            date TEXT NOT NULL,
-            amount REAL NOT NULL,
-            category_id INTEGER NOT NULL,
-            is_template INTEGER NOT NULL DEFAULT 0,
-            FOREIGN KEY(category_id) REFERENCES categories(id)
+        self.conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS transactions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                date TEXT NOT NULL,
+                amount REAL NOT NULL,
+                category_id INTEGER NOT NULL,
+                is_template INTEGER NOT NULL,
+                FOREIGN KEY(category_id) REFERENCES categories(id)
+            );
+            """
         )
-        """)
         self.conn.commit()
 
-    # --- CRUD για κατηγορίες ---
-    def add_category(self, name: str, type: str, is_monthly_template: bool=False):
-        sql = "INSERT INTO categories (name,type,is_monthly_template) VALUES (?,?,?)"
-        self.conn.execute(sql, (name, type, int(is_monthly_template)))
-        self.conn.commit()
+    def get_all_categories(self) -> list[dict]:
+        cur = self.conn.execute("SELECT * FROM categories")
+        return [dict(row) for row in cur.fetchall()]
 
-    def get_all_categories(self):
-        cursor = self.conn.execute(
-            "SELECT id,name,type,is_monthly_template FROM categories"
+    def add_category(self, name: str, ctype: str, is_monthly: bool) -> None:
+        self.conn.execute(
+            "INSERT INTO categories(name, type, is_monthly_template) VALUES (?, ?, ?)",
+            (name, ctype, int(is_monthly)),
         )
-        return [dict(row) for row in cursor.fetchall()]
-
-    def update_category(self, category_id: int, name: str=None, type: str=None, is_monthly_template: bool=None):
-        fields, params = [], []
-        if name is not None:
-            fields.append("name = ?"); params.append(name)
-        if type is not None:
-            fields.append("type = ?"); params.append(type)
-        if is_monthly_template is not None:
-            fields.append("is_monthly_template = ?"); params.append(int(is_monthly_template))
-        if not fields:
-            return
-        sql = f"UPDATE categories SET {', '.join(fields)} WHERE id = ?"
-        params.append(category_id)
-        self.conn.execute(sql, params)
         self.conn.commit()
 
-    def delete_category(self, category_id: int):
-        # Policy: διαγράφουμε κατηγορίες καί cascade delete σε συναλλαγές
-        self.conn.execute("DELETE FROM transactions WHERE category_id = ?", (category_id,))
-        self.conn.execute("DELETE FROM categories WHERE id = ?", (category_id,))
-        self.conn.commit()
-
-    # --- CRUD για συναλλαγές ---
-    def add_transaction(self, date_str: str, amount: float, category_id: int, is_template: bool=False):
-        sql = "INSERT INTO transactions (date,amount,category_id,is_template) VALUES (?,?,?,?)"
-        self.conn.execute(sql, (date_str, amount, category_id, int(is_template)))
-        self.conn.commit()
-
-    def get_transactions_by_month(self, year: int, month: int):
-        pattern = f"{year:04d}-{month:02d}-%"
-        cursor = self.conn.execute(
-            "SELECT id,date,amount,category_id,is_template FROM transactions WHERE date LIKE ?",
-            (pattern,)
+    def delete_category(self, category_id: int) -> None:
+        self.conn.execute(
+            "DELETE FROM categories WHERE id = ?", (category_id,)
         )
-        return [dict(row) for row in cursor.fetchall()]
-
-    def update_transaction(self, txn_id: int, date_str: str=None, amount: float=None,
-                           category_id: int=None, is_template: bool=None):
-        fields, params = [], []
-        if date_str is not None:
-            fields.append("date = ?"); params.append(date_str)
-        if amount is not None:
-            fields.append("amount = ?"); params.append(amount)
-        if category_id is not None:
-            fields.append("category_id = ?"); params.append(category_id)
-        if is_template is not None:
-            fields.append("is_template = ?"); params.append(int(is_template))
-        if not fields:
-            return
-        sql = f"UPDATE transactions SET {', '.join(fields)} WHERE id = ?"
-        params.append(txn_id)
-        self.conn.execute(sql, params)
         self.conn.commit()
 
-    def delete_transaction(self, txn_id: int):
-        self.conn.execute("DELETE FROM transactions WHERE id = ?", (txn_id,))
+    def update_category(
+        self, category_id: int, name: str, type: str, is_monthly_template: bool
+    ) -> None:
+        self.conn.execute(
+            "UPDATE categories SET name = ?, type = ?, is_monthly_template = ? WHERE id = ?",
+            (name, type, int(is_monthly_template), category_id),
+        )
         self.conn.commit()
 
-# Δοκιμή του model
-if __name__ == "__main__":
-    db = Database(":memory:")
-    db.add_category("Μισθός", "income", True)
-    db.add_category("Τρόφιμα", "expense", False)
-    db.add_transaction("2025-05-19", 1000, 1, True)
-    db.add_transaction("2025-05-20", 50, 2, False)
-    print("Categories:", db.get_all_categories())
-    print("May 2025 txns:", db.get_transactions_by_month(2025, 5))
+    def add_transaction(
+        self, date_str: str, amount: float, category_id: int, is_template: bool
+    ) -> None:
+        self.conn.execute(
+            "INSERT INTO transactions(date, amount, category_id, is_template) VALUES (?, ?, ?, ?)",
+            (date_str, amount, category_id, int(is_template)),
+        )
+        self.conn.commit()
+
+    def get_transactions_by_month(self, year: int, month: int) -> list[dict]:
+        like = f"{year:04d}-{month:02d}-%"
+        cur = self.conn.execute(
+            "SELECT * FROM transactions WHERE date LIKE ? ORDER BY date DESC", (like,)
+        )
+        return [dict(row) for row in cur.fetchall()]
+
+    def get_total_income(self, year: int, month: int) -> float:
+        txns = self.get_transactions_by_month(year, month)
+        return sum(tx["amount"] for tx in txns if tx["amount"] >= 0)
+
+    def get_total_expense(self, year: int, month: int) -> float:
+        txns = self.get_transactions_by_month(year, month)
+        return sum(-tx["amount"] for tx in txns if tx["amount"] < 0)
