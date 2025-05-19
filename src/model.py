@@ -112,4 +112,3 @@ if __name__ == "__main__":
     db.add_transaction("2025-05-20", 50, 2, False)
     print("Categories:", db.get_all_categories())
     print("May 2025 txns:", db.get_transactions_by_month(2025, 5))
-
