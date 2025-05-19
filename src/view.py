@@ -8,76 +8,95 @@ class MainWindow(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Personal Finance Manager")
-        self.geometry("800x600")
+        self.geometry("1200x700")
+        self.configure(bg="#222222")
 
-        # Tab control
-        tab_control = ttk.Notebook(self)
-        self.tab_categories   = ttk.Frame(tab_control)
-        self.tab_transactions = ttk.Frame(tab_control)
-        self.tab_reports      = ttk.Frame(tab_control)
+        # —————— Αριστερό Navigation Panel ——————
+        nav_frame = tk.Frame(self, bg="#333333", width=200)
+        nav_frame.pack(side="left", fill="y")
 
-        tab_control.add(self.tab_categories,   text='Κατηγορίες')
-        tab_control.add(self.tab_transactions, text='Συναλλαγές')
-        tab_control.add(self.tab_reports,      text='Αναφορές')
-        tab_control.pack(expand=1, fill='both')
+        buttons = [
+            ("Προεπισκόπηση",   "preview"),
+            ("Συναλλαγές",      "transactions"),
+            ("Κατηγορίες",      "categories"),
+            ("Αναφορές",        "reports"),
+            ("Ρυθμίσεις",       "settings")
+        ]
+        for (text, key) in buttons:
+            btn = tk.Button(
+                nav_frame, text=text, 
+                font=("Arial", 12), fg="#000", bg="#dddddd",
+                relief="flat", command=lambda k=key: self.show_frame(k)
+            )
+            btn.pack(fill="x", pady=5, padx=10)
 
-        # --- ΚΑΡΤΕΛΑ ΚΑΤΗΓΟΡΙΩΝ ---
-        # Listbox για τις κατηγορίες
-        self.cat_listbox = tk.Listbox(self.tab_categories)
-        self.cat_listbox.pack(side='left', fill='both', expand=True, padx=5, pady=5)
+        # —————— Δεξιά Content Area ——————
+        container = tk.Frame(self, bg="#222222")
+        container.pack(side="right", fill="both", expand=True)
 
-        # Δεξί πλαίσιο με φόρμα και κουμπιά
-        right_frame = ttk.Frame(self.tab_categories)
-        right_frame.pack(side='right', fill='y', padx=5, pady=5)
+        # Δημιουργούμε πέντε frames και τα τοποθετούμε το ένα πάνω στο άλλο
+        self.frames = {}
+        for key in ["preview","transactions","categories","reports","settings"]:
+            frame = tk.Frame(container, bg="#222222")
+            frame.place(relx=0, rely=0, relwidth=1, relheight=1)
+            self.frames[key] = frame
 
-        # Όνομα κατηγορίας
-        tk.Label(right_frame, text="Όνομα Κατηγορίας:").pack(anchor='w')
-        self.cat_name_entry = tk.Entry(right_frame)
-        self.cat_name_entry.pack(fill='x')
+        # —————— Προεπισκόπηση ——————
+        pv = self.frames["preview"]
+        self.preview_balance = tk.Label(
+            pv, text="Διαθέσιμο Υπόλοιπο: 0€",
+            bg="#d3d3d3", font=("Arial", 14)
+        )
+        self.preview_balance.pack(pady=(50,10))
+        self.preview_income = tk.Label(
+            pv, text="Εισόδημα: 0€",
+            bg="#d3d3d3", font=("Arial", 14)
+        )
+        self.preview_income.pack()
 
-        # Τύπος (income/expense)
-        tk.Label(right_frame, text="Τύπος:").pack(anchor='w', pady=(10,0))
-        self.cat_type_var = tk.StringVar(value='expense')
-        ttk.Combobox(
-            right_frame,
-            textvariable=self.cat_type_var,
-            values=['income', 'expense']
-        ).pack(fill='x')
+        # TODO: Canvas με πίτα (matplotlib/Canvas)
 
-        # Checkbox για μηνιαίο
-        self.cat_monthly_var = tk.BooleanVar()
+        # —————— Συναλλαγές ——————
+        tx = self.frames["transactions"]
+        tk.Label(tx, text="Προσθέστε Συναλλαγή:", fg="white", bg="#222222", font=("Arial",16)).pack(pady=20)
+        form = tk.Frame(tx, bg="#222222")
+        form.pack(pady=10)
+        # Ημερομηνία
+        tk.Label(form, text="Ημερομηνία:", fg="white", bg="#222222").grid(row=0, column=0, sticky="e", padx=5, pady=5)
+        self.tx_date = tk.Entry(form); self.tx_date.grid(row=0, column=1, padx=5, pady=5)
+        # Κατηγορία
+        tk.Label(form, text="Κατηγορία:", fg="white", bg="#222222").grid(row=1, column=0, sticky="e", padx=5, pady=5)
+        self.tx_category = tk.Entry(form); self.tx_category.grid(row=1, column=1, padx=5, pady=5)
+        # Ποσό
+        tk.Label(form, text="Ποσό:", fg="white", bg="#222222").grid(row=2, column=0, sticky="e", padx=5, pady=5)
+        self.tx_amount = tk.Entry(form); self.tx_amount.grid(row=2, column=1, padx=5, pady=5)
+        # Επαναλαμβανόμενη
+        self.tx_recurring = tk.BooleanVar()
         tk.Checkbutton(
-            right_frame,
-            text="Μηνιαίο",
-            variable=self.cat_monthly_var
-        ).pack(anchor='w', pady=5)
+            tx, text="Σημειώστε την ως επαναλαμβανόμενη συναλλαγή",
+            variable=self.tx_recurring, fg="white", bg="#222222"
+        ).pack(pady=10)
+        tk.Button(tx, text="Προσθήκη", font=("Arial",18), bg="#2a7f97", fg="white").pack(pady=20)
 
-        # Κουμπιά CRUD
-        ttk.Button(
-            right_frame,
-            text="Προσθήκη",
-            command=self._add_category
-        ).pack(fill='x', pady=(10,2))
-        ttk.Button(
-            right_frame,
-            text="Διαγραφή",
-            command=self._delete_category
-        ).pack(fill='x', pady=2)
-        ttk.Button(
-            right_frame,
-            text="Ενημέρωση",
-            command=self._update_category
-        ).pack(fill='x', pady=2)
+        # —————— Κατηγορίες ——————
+        cat = self.frames["categories"]
+        # (εδώ μπορείς να επικολλήσεις τον κώδικα της φόρμας CRUD κατηγοριών που είχες ήδη)
+        # π.χ. listbox, entry, combobox, checkbutton, buttons
 
-    # --- Stubs για χειριστήρια (θα δεθούν από τον controller) ---
-    def _add_category(self):
-        """Κλήση από κουμπί Προσθήκης κατηγορίας"""
-        pass
+        # —————— Αναφορές ——————
+        rep = self.frames["reports"]
+        tk.Label(rep, text="Αναφορές", fg="white", bg="#222222", font=("Arial",20)).pack(pady=20)
+        # TODO: Ενσωμάτωση matplotlib bar chart
 
-    def _delete_category(self):
-        """Κλήση από κουμπί Διαγραφής επιλεγμένης κατηγορίας"""
-        pass
+        # —————— Ρυθμίσεις ——————
+        sett = self.frames["settings"]
+        tk.Label(sett, text="Ρυθμίσεις", fg="white", bg="#222222", font=("Arial",20)).pack(pady=20)
+        # TODO: Ρυθμίσεις export, defaults κλπ.
 
-    def _update_category(self):
-        """Κλήση από κουμπί Ενημέρωσης επιλεγμένης κατηγορίας"""
-        pass
+        # Εμφάνιση πρώτης οθόνης
+        self.show_frame("preview")
+
+    def show_frame(self, key: str):
+        """Φέρνει μπροστά το frame με κλειδί key."""
+        frame = self.frames[key]
+        frame.tkraise()
