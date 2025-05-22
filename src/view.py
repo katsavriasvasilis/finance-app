@@ -16,8 +16,10 @@ ENTRY_BG      = "#4B5563"
 ENTRY_FG      = "#F9FAFB"
 
 class MainWindow(tk.Tk):
-    def __init__(self):
+    def __init__(self, controller):
         super().__init__()
+        self.controller = controller  # Αποθηκεύουμε την αναφορά του controller
+
         # Styling combobox
         style = ttk.Style(self)
         style.theme_use('clam')
@@ -26,6 +28,11 @@ class MainWindow(tk.Tk):
             fieldbackground=ENTRY_BG,
             background=ENTRY_BG,
             foreground=ENTRY_FG
+        )
+        style.map(
+            'Custom.TCombobox',
+            fieldbackground=[('readonly', ENTRY_BG)],
+            foreground=[('readonly', ENTRY_FG)]
         )
 
         self.title("Personal Finance Manager")
@@ -140,24 +147,45 @@ class MainWindow(tk.Tk):
         form_tx = tk.Frame(tx, bg=BG_PANEL)
         form_tx.pack(anchor="nw", padx=20, pady=10)
 
-        tk.Label(form_tx, text="Ημερομηνία:", font=self.body, bg=BG_PANEL, fg=FG_TEXT).grid(row=0, column=0)
+        # Πεδίο για την ημερομηνία
+        tk.Label(form_tx, text="Ημερομηνία (ΗΗ/ΜΜ/ΧΧ):", font=self.body, bg=BG_PANEL, fg=FG_TEXT).grid(row=0, column=0)
         self.tx_date = tk.Entry(form_tx, bg=ENTRY_BG, fg=ENTRY_FG, font=self.body)
         self.tx_date.grid(row=0, column=1, padx=5)
+        self.tx_date.insert(0, "ΗΗ/ΜΜ/ΧΧ")  # Προεπιλεγμένο κείμενο
 
+        # Πεδίο για την κατηγορία
         tk.Label(form_tx, text="Κατηγορία:", font=self.body, bg=BG_PANEL, fg=FG_TEXT).grid(row=1, column=0)
-        self.tx_category_cb = ttk.Combobox(form_tx, state="readonly", font=self.body)
+        self.tx_category_cb = ttk.Combobox(
+            form_tx,
+            state="readonly",
+            font=self.body,
+            values=[]  # Οι τιμές θα ενημερωθούν από τον controller
+        )
         self.tx_category_cb.grid(row=1, column=1, padx=5)
 
+        # Πεδίο για το ποσό
         tk.Label(form_tx, text="Ποσό:", font=self.body, bg=BG_PANEL, fg=FG_TEXT).grid(row=2, column=0)
         self.tx_amount = tk.Entry(form_tx, bg=ENTRY_BG, fg=ENTRY_FG, font=self.body)
         self.tx_amount.grid(row=2, column=1, padx=5)
 
+        # Checkbox για επαναλαμβανόμενη συναλλαγή
         self.tx_recurring = tk.BooleanVar()
-        tk.Checkbutton(form_tx, text="Επαναλαμβανόμενη", font=self.body, variable=self.tx_recurring, bg=BG_PANEL, fg=FG_TEXT).grid(row=3, columnspan=2, pady=5)
+        tk.Checkbutton(
+            form_tx,
+            text="Επαναλαμβανόμενη",
+            font=self.body,
+            variable=self.tx_recurring,  # Σύνδεση με τη μεταβλητή
+            onvalue=True,  # Τιμή όταν είναι επιλεγμένο
+            offvalue=False,  # Τιμή όταν δεν είναι επιλεγμένο
+            bg=BG_PANEL,
+            fg=FG_TEXT
+        ).grid(row=3, columnspan=2, pady=5)
 
+        # Κουμπί για προσθήκη συναλλαγής
         self.tx_add_button = tk.Button(form_tx, text="Προσθήκη Συναλλαγής", bg=CRUD_BTN_BG, fg=CRUD_BTN_FG, font=self.body, bd=0)
         self.tx_add_button.grid(row=4, columnspan=2, pady=10)
 
+        # Λίστα συναλλαγών
         self.tx_listbox = tk.Listbox(tx, bg=ENTRY_BG, fg=ENTRY_FG, font=self.body)
         self.tx_listbox.pack(fill="both", expand=True, padx=20, pady=10)
 
@@ -195,3 +223,100 @@ class MainWindow(tk.Tk):
 
         self.cat_upd_btn = tk.Button(btn_frame, text="Ενημέρωση", bg=CRUD_BTN_BG, fg=CRUD_BTN_FG, font=self.body, bd=0)
         self.cat_upd_btn.pack(side="left", expand=True, fill="x", padx=2)
+
+    def _refresh_categories(self):
+        # Οι σωστές κατηγορίες
+        category_names = [
+            "Συνδρομές (streaming, γυμναστήριο)",
+            "Μεταβλητά Έξοδα – Καθημερινής Διαβίωσης",
+            "Τρόφιμα & Σούπερ Μάρκετ",
+            "Καφές / Delivery",
+            "Μετακινήσεις (βενζίνη, ΜΜΜ)",
+            "Προσωπική Φροντίδα & Υγεία",
+            "Φάρμακα & Ιατρικές Επισκέψεις",
+            "Κομμωτήριο / Καλλυντικά",
+            "Διασκέδαση & Ελεύθερος Χρόνος",
+            "Κινηματογράφος / Θέατρο",
+            "Ταξίδια & Διακοπές",
+            "Εκπαίδευση & Παιδιά",
+            "Φροντιστήρια / Μαθήματα",
+            "Σχολικά Τέλη & Είδη",
+            "Ενδυμασία & Οικιακός Εξοπλισμός",
+            "Ρούχα & Υποδήματα",
+            "Έπιπλα & Ηλεκτρικές Συσκευές",
+            "Αποταμίευση & Επενδύσεις",
+            "Ταμείο Έκτακτων Αναγκών",
+            "Επενδυτικά Προϊόντα",
+            "Φορολογία & Διοικητικά Τέλη",
+            "Φόροι (εισοδήματος, ΙΧ)",
+            "Δημοτικά & Κυκλοφορίας Τέλη"
+        ]
+        # Ενημέρωση του Combobox
+        self.ui.tx_category_cb['values'] = category_names
+        # Ορισμός της πρώτης κατηγορίας ως προεπιλεγμένη
+        self.ui.tx_category_cb.current(0)
+
+    def _handle_add_transaction(self):
+        date_str = self.ui.tx_date.get().strip()
+        cat_name = self.ui.tx_category_cb.get().strip()
+        try:
+            amt = float(self.ui.tx_amount.get().strip())
+        except ValueError:
+            print("Μη έγκυρο ποσό!")
+            return
+
+        is_recurring = self.ui.tx_recurring.get()  # Παίρνουμε την τιμή του checkbox
+        print(f"Ημερομηνία: {date_str}, Κατηγορία: {cat_name}, Ποσό: {amt}, Επαναλαμβανόμενη: {is_recurring}")
+
+        # Αποθήκευση της συναλλαγής στη βάση δεδομένων
+        self.db.add_transaction(transaction_date=date_str, category=cat_name, amount=amt, recurring=is_recurring)
+
+        # Εκτύπωση της κατάστασης του checkbox μετά την αποθήκευση
+        print(f"Κατάσταση του checkbox μετά την αποθήκευση: {self.ui.tx_recurring.get()}")
+
+        # Επαναφορά των πεδίων στην αρχική τους κατάσταση
+        self.ui.tx_date.delete(0, 'end')
+        self.ui.tx_date.insert(0, "ΗΗ/ΜΜ/ΧΧ")  # Προσθήκη προεπιλεγμένου κειμένου
+
+        self.ui.tx_category_cb.set('')  # Επαναφορά του Combobox "Κατηγορία"
+
+        self.ui.tx_amount.delete(0, 'end')  # Καθαρισμός του πεδίου "Ποσό"
+
+        self.ui.tx_recurring.set(False)  # Επαναφορά του checkbox σε μη επιλεγμένο
+
+    def _bind_transactions(self):
+        self.ui.tx_add_button.config(command=self._handle_add_transaction)
+        self._refresh_transactions()
+
+        # Εκτύπωση της τιμής του checkbox όταν αλλάζει
+        self.ui.tx_recurring.trace_add("write", lambda *args: print(f"Επαναλαμβανόμενη: {self.ui.tx_recurring.get()}"))
+
+    def add_transaction(self, date, category, amount, recurring):
+        # Υλοποίηση της μεθόδου
+        pass
+
+class Database:
+    def add_transaction(self, transaction_date, category, amount, recurring):
+        # Υλοποίηση της μεθόδου
+        print(f"Προσθήκη συναλλαγής: {transaction_date}, {category}, {amount}, {recurring}")
+
+def main():
+    root = tk.Tk()
+    root.geometry("300x200")
+    recurring_var = tk.BooleanVar()
+
+    def print_value(*args):
+        print(f"Επαναλαμβανόμενη: {recurring_var.get()}")
+
+    recurring_var.trace_add("write", print_value)
+    tk.Checkbutton(
+        root,
+        text="Επαναλαμβανόμενη",
+        variable=recurring_var,
+        onvalue=True,
+        offvalue=False
+    ).pack(pady=20)
+    root.mainloop()
+
+if __name__ == "__main__":
+    main()

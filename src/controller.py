@@ -7,7 +7,7 @@ class AppController:
         # Model
         self.db = Database()
         # View
-        self.ui = MainWindow()
+        self.ui = MainWindow(controller=self)  # Περνάμε τον controller στη MainWindow
         # Bind events
         self._bind_categories()
         self._bind_transactions()
@@ -22,18 +22,34 @@ class AppController:
         self._refresh_categories()
 
     def _refresh_categories(self):
-        cats = self.db.get_all_categories()
-        lb = self.ui.cat_listbox
-        lb.delete(0, 'end')
-        self._cat_ids = []
-        for cat in cats:
-            label = f"{cat['name']} ({cat['type']})"
-            if cat['is_monthly_template']:
-                label += " [Μηνιαίο]"
-            lb.insert('end', label)
-            self._cat_ids.append(cat['id'])
-        # ενημέρωση combobox συναλλαγών
-        self.ui.tx_category_cb['values'] = [c['name'] for c in cats]
+        # Οι σωστές κατηγορίες
+        category_names = [
+            "Συνδρομές (streaming, γυμναστήριο)",
+            "Μεταβλητά Έξοδα – Καθημερινής Διαβίωσης",
+            "Τρόφιμα & Σούπερ Μάρκετ",
+            "Καφές / Delivery",
+            "Μετακινήσεις (βενζίνη, ΜΜΜ)",
+            "Προσωπική Φροντίδα & Υγεία",
+            "Φάρμακα & Ιατρικές Επισκέψεις",
+            "Κομμωτήριο / Καλλυντικά",
+            "Διασκέδαση & Ελεύθερος Χρόνος",
+            "Κινηματογράφος / Θέατρο",
+            "Ταξίδια & Διακοπές",
+            "Εκπαίδευση & Παιδιά",
+            "Φροντιστήρια / Μαθήματα",
+            "Σχολικά Τέλη & Είδη",
+            "Ενδυμασία & Οικιακός Εξοπλισμός",
+            "Ρούχα & Υποδήματα",
+            "Έπιπλα & Ηλεκτρικές Συσκευές",
+            "Αποταμίευση & Επενδύσεις",
+            "Ταμείο Έκτακτων Αναγκών",
+            "Επενδυτικά Προϊόντα",
+            "Φορολογία & Διοικητικά Τέλη",
+            "Φόροι (εισοδήματος, ΙΧ)",
+            "Δημοτικά & Κυκλοφορίας Τέλη"
+        ]
+        # Ενημέρωση του Combobox
+        self.ui.tx_category_cb['values'] = category_names
 
     def _handle_add_category(self):
         name = self.ui.cat_name_entry.get().strip()
@@ -79,18 +95,17 @@ class AppController:
         try:
             amt = float(self.ui.tx_amount.get().strip())
         except ValueError:
+            print("Μη έγκυρο ποσό!")
             return
-        try:
-            datetime.strptime(date_str, "%Y-%m-%d")
-        except ValueError:
-            return
-        cats = self.db.get_all_categories()
-        name_to_id = {c['name']: c['id'] for c in cats}
-        cid = name_to_id.get(cat_name)
-        if cid is None:
-            return
-        self.db.add_transaction(date_str, amt, cid, self.ui.tx_recurring.get())
-        self._refresh_transactions()
+
+        is_recurring = self.ui.tx_recurring.get()  # Παίρνουμε την τιμή του checkbox
+        print(f"Ημερομηνία: {date_str}, Κατηγορία: {cat_name}, Ποσό: {amt}, Επαναλαμβανόμενη: {is_recurring}")
+        self.db.add_transaction(date=date_str, category=cat_name, amount=amt, recurring=is_recurring)
+
+
+    def _handle_category_selection(self, event):
+        selected_category = self.ui.tx_category_cb.get()
+        print(f"Ο χρήστης επέλεξε την κατηγορία: {selected_category}")
 
     def run(self):
         self.ui.mainloop()
