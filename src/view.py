@@ -78,6 +78,7 @@ class MainWindow(tk.Tk):
         self._create_preview_frame()
         self._create_transactions_frame()
         self._create_categories_frame()
+        self._create_reports_frame()
 
         self.show_frame("preview")
 
@@ -225,6 +226,34 @@ class MainWindow(tk.Tk):
 
         self.cat_upd_btn = tk.Button(btn_frame, text="Ενημέρωση", bg=CRUD_BTN_BG, fg=CRUD_BTN_FG, font=self.body, bd=0)
         self.cat_upd_btn.pack(side="left", expand=True, fill="x", padx=2)
+
+    def _create_reports_frame(self):
+        reports = self.frames["reports"]
+        tk.Label(reports, text="Αναφορές", font=self.h1, bg=BG_PANEL, fg=FG_TEXT).pack(anchor="n", pady=20)
+
+        # Δημιουργία πλαισίου για το διάγραμμα
+        chart_frame = tk.Frame(reports, bg=BG_PANEL)
+        chart_frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+        # Δεδομένα για το διάγραμμα (μηδενικά δεδομένα)
+        months = ["Ιαν", "Φεβ", "Μαρ", "Απρ", "Μάι", "Ιούν", "Ιούλ", "Αύγ", "Σεπ", "Οκτ", "Νοέ", "Δεκ"]
+        income = [0] * 12  # Μηδενικά έσοδα
+        expenses = [0] * 12  # Μηδενικά έξοδα
+
+        # Δημιουργία διαγράμματος ράβδων
+        fig = Figure(figsize=(8, 5), dpi=100)
+        ax = fig.add_subplot(111)
+        ax.bar(months, income, label="Έσοδα", color="green", alpha=0.7)
+        ax.bar(months, expenses, label="Έξοδα", color="red", alpha=0.7)
+        ax.set_title("Μηνιαία Έσοδα vs Έξοδα")
+        ax.set_xlabel("Μήνες")
+        ax.set_ylabel("Ποσά (€)")
+        ax.legend()
+
+        # Ενσωμάτωση του διαγράμματος στο Tkinter
+        chart_canvas = FigureCanvasTkAgg(fig, master=chart_frame)
+        chart_canvas.draw()
+        chart_canvas.get_tk_widget().pack(fill="both", expand=True)
 
     def _refresh_categories(self):
         # Οι σωστές κατηγορίες
