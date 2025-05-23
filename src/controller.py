@@ -3,26 +3,15 @@ from .view import MainWindow
 from datetime import datetime
 
 class AppController:
-    def __init__(self):
-        # Model
-        self.db = Database()
-        # View
-        self.ui = MainWindow(controller=self)  # Περνάμε τον controller στη MainWindow
-        # Bind events
-        self._bind_categories()
-        self._bind_transactions()
-        # Start
-        self.ui.show_frame("preview")
+    def __init__(self, ui, db):
+        self.ui = ui
+        self.db = db
 
-    # ——— Categories CRUD ———
-    def _bind_categories(self):
-        self.ui.cat_add_btn.config(command=self._handle_add_category)
-        self.ui.cat_del_btn.config(command=self._handle_delete_category)
-        self.ui.cat_upd_btn.config(command=self._handle_update_category)
+        # Ενημέρωση των κατηγοριών κατά την εκκίνηση
         self._refresh_categories()
 
     def _refresh_categories(self):
-        # Οι σωστές κατηγορίες
+        # Λίστα κατηγοριών (μπορεί να προέρχεται από τη βάση δεδομένων)
         category_names = [
             "Συνδρομές (streaming, γυμναστήριο)",
             "Μεταβλητά Έξοδα – Καθημερινής Διαβίωσης",
@@ -48,34 +37,10 @@ class AppController:
             "Φόροι (εισοδήματος, ΙΧ)",
             "Δημοτικά & Κυκλοφορίας Τέλη"
         ]
-        # Ενημέρωση του Combobox
+
+        # Ενημέρωση του Combobox στο view
         self.ui.tx_category_cb['values'] = category_names
-
-    def _handle_add_category(self):
-        name = self.ui.cat_name_entry.get().strip()
-        ctype = self.ui.cat_type_var.get()
-        mon = self.ui.cat_monthly_var.get()
-        if name:
-            self.db.add_category(name, ctype, mon)
-            self._refresh_categories()
-
-    def _handle_delete_category(self):
-        sel = self.ui.cat_listbox.curselection()
-        if sel:
-            cid = self._cat_ids[sel[0]]
-            self.db.delete_category(cid)
-            self._refresh_categories()
-
-    def _handle_update_category(self):
-        sel = self.ui.cat_listbox.curselection()
-        if sel:
-            cid = self._cat_ids[sel[0]]
-            name = self.ui.cat_name_entry.get().strip()
-            ctype = self.ui.cat_type_var.get()
-            mon = self.ui.cat_monthly_var.get()
-            if name:
-                self.db.update_category(cid, name=name, type=ctype, is_monthly_template=mon)
-                self._refresh_categories()
+        self.ui.tx_category_cb.current(0)  # Ορισμός της πρώτης κατηγορίας ως προεπιλεγμένη
 
     # ——— Transactions CRUD ———
     def _bind_transactions(self):

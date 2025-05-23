@@ -159,7 +159,9 @@ class MainWindow(tk.Tk):
             form_tx,
             state="readonly",
             font=self.body,
-            values=[]  # Οι τιμές θα ενημερωθούν από τον controller
+            values=[],  # Οι τιμές θα ενημερωθούν από τον controller
+            style="Custom.TCombobox",  # Εφαρμογή του ίδιου στυλ
+            width=18 
         )
         self.tx_category_cb.grid(row=1, column=1, padx=5)
 
@@ -317,6 +319,3 @@ def main():
         offvalue=False
     ).pack(pady=20)
     root.mainloop()
-
-if __name__ == "__main__":
-    main()
