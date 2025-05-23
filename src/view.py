@@ -124,9 +124,9 @@ class MainWindow(tk.Tk):
         # Δημιουργία διαγράμματος κουλούρας
         fig = Figure(figsize=(4, 4), dpi=100)
         ax = fig.add_subplot(111)
-        data = [50, 50]  # Placeholder δεδομένα
+        data = [50, 50]  # Placeholder δεδομένασ
         labels = ["Εισόδημα", "Έξοδα"]
-        colors = ["#4CAF50", "#F44336"]
+        colors = ["#58468A", "#B0B0B3"]
         ax.pie(data, labels=labels, autopct="%1.1f%%", startangle=90, colors=colors)
         ax.set_title("Αναλογία Εισοδήματος/Εξόδων")
 
@@ -162,7 +162,7 @@ class MainWindow(tk.Tk):
             font=self.body,
             values=[],  # Οι τιμές θα ενημερωθούν από τον controller
             style="Custom.TCombobox",  # Εφαρμογή του ίδιου στυλ
-            width=18 
+            width=18
         )
         self.tx_category_cb.grid(row=1, column=1, padx=5)
 
