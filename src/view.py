@@ -275,7 +275,7 @@ class MainWindow(tk.Tk):
         english_flag_path = r"E:\Documents\Πανεπιστήμιο ΕΑΠ\Εργασία  ΠληΠΡΟ (2025)\finance-app\ρυθμίσεις\buttons_greek_english\eng.png"
 
         # Δημιουργία πλαισίου για τα κουμπιά
-        frame = tk.Frame(settings, bg=BG_PANEL, bd=1, relief="solid", highlightbackground="#B0B0B0", highlightthickness=1)  # Γκρι περίγραμμα
+        frame = tk.Frame(settings, bg=BG_PANEL, bd=1, relief="solid", highlightbackground="#B0B0B0", highlightthickness=1)
         frame.pack(anchor="n", pady=20)
 
         # Δημιουργία κουμπιών για αλλαγή γλώσσας
@@ -286,6 +286,32 @@ class MainWindow(tk.Tk):
             greek_btn.grid(row=0, column=0, padx=20, pady=20)
         if english_btn:
             english_btn.grid(row=0, column=1, padx=20, pady=20)
+
+        # Ετικέτα για αλλαγή νομίσματος
+        tk.Label(settings, text="Αλλαγή νομίσματος:", font=self.body, bg=BG_PANEL, fg=FG_TEXT).pack(anchor="n", pady=10)
+
+        # ComboBox για την επιλογή νομίσματος
+        currency_combobox = ttk.Combobox(settings, state="readonly", font=self.body)
+        currency_combobox['values'] = [
+            "Ευρώ (€)",
+            "Δολάριο ΗΠΑ (USD)",
+            "Λίρα Αγγλίας (GBP)",
+            "Ιαπωνικό Γιεν (JPY)",
+            "Ελβετικό Φράγκο (CHF)",
+            "Δολάριο Καναδά (CAD)",
+            "Δολάριο Αυστραλίας (AUD)",
+            "Κορόνα Σουηδίας (SEK)",
+            "Κορόνα Νορβηγίας (NOK)",
+            "Κορόνα Δανίας (DKK)",
+            "Ρούβλι Ρωσίας (RUB)",
+            "Γουάν Κίνας (CNY)",
+            "Ρουπία Ινδίας (INR)",
+            "Δολάριο Σιγκαπούρης (SGD)",
+            "Δολάριο Νέας Ζηλανδίας (NZD)",
+            "Πέσο Μεξικού (MXN)"
+        ]
+        currency_combobox.pack(anchor="n", pady=10)
+        currency_combobox.current(0)  # Ορισμός της πρώτης επιλογής ως προεπιλεγμένη
 
     def _create_button_with_flag(self, root, flag_path, language):
         """Δημιουργεί κουμπί με σημαία για αλλαγή γλώσσας χωρίς περίγραμμα."""
