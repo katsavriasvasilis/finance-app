@@ -1,5 +1,6 @@
 import tkinter as tk
-from tkinter import ttk, font
+from tkinter import ttk, filedialog, messagebox, font
+import pandas as pd
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from PIL import Image, ImageTk
@@ -264,78 +265,106 @@ class MainWindow(tk.Tk):
         chart_canvas.get_tk_widget().pack(fill="both", expand=True)
 
     def _create_settings_frame(self):
-        settings = self.frames["settings"]
-        tk.Label(settings, text="Ρυθμίσεις", font=self.h1, bg=BG_PANEL, fg=FG_TEXT).pack(anchor="n", pady=20)
+        settings_frame = self.frames["settings"]
+        tk.Label(settings_frame, text="Ρυθμίσεις", font=self.h1, bg=BG_PANEL, fg=FG_TEXT).pack(anchor="n", pady=20)
 
         # Ετικέτα για αλλαγή γλώσσας
-        tk.Label(settings, text="Αλλαγή γλώσσας:", font=self.body, bg=BG_PANEL, fg=FG_TEXT).pack(anchor="n", pady=10)
+        tk.Label(settings_frame, text="Αλλαγή γλώσσας:", font=self.body, bg=BG_PANEL, fg=FG_TEXT).pack(anchor="n", pady=10)
 
-        # Διαδρομές για τις σημαίες
+        # Πλαίσιο για τις σημαίες
+        flags_frame = tk.Frame(settings_frame, bg=BG_PANEL)
+        flags_frame.pack(anchor="n", pady=10)
+
+        # Κουμπιά με σημαίες
         greek_flag_path = r"E:\Documents\Πανεπιστήμιο ΕΑΠ\Εργασία  ΠληΠΡΟ (2025)\finance-app\ρυθμίσεις\buttons_greek_english\gr.png"
         english_flag_path = r"E:\Documents\Πανεπιστήμιο ΕΑΠ\Εργασία  ΠληΠΡΟ (2025)\finance-app\ρυθμίσεις\buttons_greek_english\eng.png"
 
-        # Δημιουργία πλαισίου για τα κουμπιά
-        frame = tk.Frame(settings, bg=BG_PANEL, bd=1, relief="solid", highlightbackground="#B0B0B0", highlightthickness=1)
-        frame.pack(anchor="n", pady=20)
+        # Αυξάνουμε το μέγεθος των σημαιών
+        greek_flag = ImageTk.PhotoImage(Image.open(greek_flag_path).resize((60, 40)))  # Πλάτος 60, Ύψος 40
+        english_flag = ImageTk.PhotoImage(Image.open(english_flag_path).resize((60, 40)))  # Πλάτος 60, Ύψος 40
 
-        # Δημιουργία κουμπιών για αλλαγή γλώσσας
-        greek_btn = self._create_button_with_flag(frame, greek_flag_path, "greek")
-        english_btn = self._create_button_with_flag(frame, english_flag_path, "english")
+        greek_btn = tk.Button(flags_frame, image=greek_flag, command=lambda: self.change_language("greek"), bg=BG_PANEL, bd=0)
+        greek_btn.image = greek_flag  # Αποθήκευση αναφοράς για να μην χαθεί η εικόνα
+        greek_btn.pack(side="left", padx=10)
 
-        if greek_btn:
-            greek_btn.grid(row=0, column=0, padx=20, pady=20)
-        if english_btn:
-            english_btn.grid(row=0, column=1, padx=20, pady=20)
+        english_btn = tk.Button(flags_frame, image=english_flag, command=lambda: self.change_language("english"), bg=BG_PANEL, bd=0)
+        english_btn.image = english_flag  # Αποθήκευση αναφοράς για να μην χαθεί η εικόνα
+        english_btn.pack(side="left", padx=10)
 
         # Ετικέτα για αλλαγή νομίσματος
-        tk.Label(settings, text="Αλλαγή νομίσματος:", font=self.body, bg=BG_PANEL, fg=FG_TEXT).pack(anchor="n", pady=10)
+        tk.Label(settings_frame, text="Αλλαγή νομίσματος:", font=self.body, bg=BG_PANEL, fg=FG_TEXT).pack(anchor="n", pady=10)
 
         # ComboBox για την επιλογή νομίσματος
-        currency_combobox = ttk.Combobox(settings, state="readonly", font=self.body)
+        currency_combobox = ttk.Combobox(settings_frame, state="readonly", font=self.body)
         currency_combobox['values'] = [
-            "Ευρώ (€)",
-            "Δολάριο ΗΠΑ (USD)",
-            "Λίρα Αγγλίας (GBP)",
-            "Ιαπωνικό Γιεν (JPY)",
-            "Ελβετικό Φράγκο (CHF)",
-            "Δολάριο Καναδά (CAD)",
-            "Δολάριο Αυστραλίας (AUD)",
-            "Κορόνα Σουηδίας (SEK)",
-            "Κορόνα Νορβηγίας (NOK)",
-            "Κορόνα Δανίας (DKK)",
-            "Ρούβλι Ρωσίας (RUB)",
-            "Γουάν Κίνας (CNY)",
-            "Ρουπία Ινδίας (INR)",
-            "Δολάριο Σιγκαπούρης (SGD)",
-            "Δολάριο Νέας Ζηλανδίας (NZD)",
-            "Πέσο Μεξικού (MXN)"
+            "Ευρώ (€)", "Δολάριο ΗΠΑ (USD)", "Λίρα Αγγλίας (GBP)", "Ιαπωνικό Γιεν (JPY)",
+            "Ελβετικό Φράγκο (CHF)", "Δολάριο Καναδά (CAD)", "Δολάριο Αυστραλίας (AUD)",
+            "Κορόνα Σουηδίας (SEK)", "Κορόνα Νορβηγίας (NOK)", "Κορόνα Δανίας (DKK)",
+            "Ρούβλι Ρωσίας (RUB)", "Γουάν Κίνας (CNY)", "Ρουπία Ινδίας (INR)",
+            "Δολάριο Σιγκαπούρης (SGD)", "Δολάριο Νέας Ζηλανδίας (NZD)", "Πέσο Μεξικού (MXN)"
         ]
         currency_combobox.pack(anchor="n", pady=10)
-        currency_combobox.current(0)  # Ορισμός της πρώτης επιλογής ως προεπιλεγμένη
+        currency_combobox.current(0)
 
-    def _create_button_with_flag(self, root, flag_path, language):
-        """Δημιουργεί κουμπί με σημαία για αλλαγή γλώσσας χωρίς περίγραμμα."""
-        absolute_path = os.path.abspath(flag_path)
-        if not os.path.exists(absolute_path):
-            tk.messagebox.showerror("Σφάλμα", f"Το αρχείο {absolute_path} δεν βρέθηκε.")
-            return None
+        # Κουμπί για εξαγωγή δεδομένων
+        export_button = tk.Button(settings_frame, text="Εξαγωγή ως", command=self._export_data, bg=BTN_BG, fg=BTN_FG, font=self.body)
+        export_button.pack(anchor="n", pady=10)
 
-        img = Image.open(absolute_path)
-        img = img.resize((50, 30), Image.Resampling.LANCZOS)  # Χρήση του LANCΖΟΣ για υψηλή ποιότητα
-        photo = ImageTk.PhotoImage(img)
-
-        btn = ttk.Button(root, image=photo, command=lambda: self._change_language(language), style="Flat.TButton")
-        btn.image = photo  # κρατάμε την αναφορά
-        return btn
-
-    def _change_language(self, language):
-        """Αλλάζει τη γλώσσα της εφαρμογής."""
+    def change_language(self, language):
+        """Αλλαγή γλώσσας της εφαρμογής και εμφάνιση μηνύματος σε νέο παράθυρο."""
         if language == "greek":
-            tk.messagebox.showinfo("Αλλαγή Γλώσσας", "Το πρόγραμμα είναι τώρα στα Ελληνικά.")
+            message = "Το πρόγραμμα λειτουργεί πλέον στα Ελληνικά"
         elif language == "english":
-            tk.messagebox.showinfo("Language Change", "The program is now in English.")
+            message = "The program works now in English"
         else:
-            tk.messagebox.showerror("Σφάλμα", "Μη υποστηριζόμενη γλώσσα.")
+            message = "Unknown language"
+
+        # Δημιουργία νέου παραθύρου για το μήνυμα
+        popup = tk.Toplevel(self)
+        popup.title("Αλλαγή Γλώσσας")
+        popup.configure(bg=BG_PANEL)
+
+        # Ετικέτα για το μήνυμα
+        label = tk.Label(popup, text=message, font=self.body, bg=BG_PANEL, fg=FG_TEXT)
+        label.pack(expand=True, pady=20)
+
+        # Κουμπί για κλείσιμο του παραθύρου
+        tk.Button(popup, text="OK", command=popup.destroy, bg=BTN_BG, fg=BTN_FG, font=self.body).pack(pady=10)
+
+        # Προσαρμογή μεγέθους παραθύρου
+        popup.update_idletasks()  # Υπολογισμός του απαιτούμενου μεγέθους
+        width = label.winfo_reqwidth() + 40  # Προσθέτουμε padding
+        height = label.winfo_reqheight() + 80  # Προσθέτουμε padding για το κουμπί
+        popup.geometry(f"{width}x{height}")
+
+    def _export_data(self):
+        """Λειτουργία εξαγωγής δεδομένων ως CSV ή Excel."""
+        folder_selected = filedialog.askdirectory(title="Επιλέξτε φάκελο αποθήκευσης")
+        if not folder_selected:
+            messagebox.showwarning("Ειδοποίηση", "Δεν επιλέχθηκε φάκελος αποθήκευσης.")
+            return
+        try:
+            df = pd.DataFrame({
+                "Ημερομηνία": [],
+                "Κατηγορία": [],
+                "Ποσό": [],
+                "Επαναλαμβανόμενη": []
+            })
+            file_path = filedialog.asksaveasfilename(
+                initialdir=folder_selected,
+                title="Αποθήκευση ως",
+                defaultextension=".csv",
+                filetypes=[("CSV files", "*.csv"), ("Excel files", "*.xlsx")]
+            )
+            if not file_path:
+                return
+            if file_path.endswith(".csv"):
+                df.to_csv(file_path, index=False)
+            else:
+                df.to_excel(file_path, index=False)
+            messagebox.showinfo("Επιτυχία", "Τα δεδομένα εξήχθησαν επιτυχώς.")
+        except Exception as e:
+            messagebox.showerror("Σφάλμα", f"Σφάλμα κατά την εξαγωγή: {e}")
 
     def _refresh_categories(self):
         # Οι σωστές κατηγορίες
