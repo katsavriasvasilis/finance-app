@@ -211,20 +211,30 @@ class MainWindow(tk.Tk):
         form_cat = tk.Frame(ct, bg=BG_PANEL)
         form_cat.pack(anchor="nw", padx=20, pady=10)
 
+        # Ορίζουμε το ίδιο πλάτος για τα πεδία "Όνομα", "Ποσό" και "Τύπος"
+        field_width = 20
+
+        # Πεδίο "Όνομα"
         tk.Label(form_cat, text="Όνομα:", font=self.body, bg=BG_PANEL, fg=FG_TEXT).grid(row=0, column=0)
-        self.cat_name_entry = tk.Entry(form_cat, bg=ENTRY_BG, fg=ENTRY_FG, font=self.body)
+        self.cat_name_entry = tk.Entry(form_cat, bg=ENTRY_BG, fg=ENTRY_FG, font=self.body, width=field_width)
         self.cat_name_entry.grid(row=0, column=1, padx=5)
 
-        tk.Label(form_cat, text="Τύπος:", font=self.body, bg=BG_PANEL, fg=FG_TEXT).grid(row=1, column=0)
+        # Πεδίο "Ποσό"
+        tk.Label(form_cat, text="Ποσό:", font=self.body, bg=BG_PANEL, fg=FG_TEXT).grid(row=1, column=0)
+        self.cat_amount_entry = tk.Entry(form_cat, bg=ENTRY_BG, fg=ENTRY_FG, font=self.body, width=field_width)
+        self.cat_amount_entry.grid(row=1, column=1, padx=5)
+
+        # Πεδίο "Τύπος"
+        tk.Label(form_cat, text="Τύπος:", font=self.body, bg=BG_PANEL, fg=FG_TEXT).grid(row=2, column=0)
         self.cat_type_var = tk.StringVar(value="expense")
-        self.cat_type_cb = ttk.Combobox(form_cat, textvariable=self.cat_type_var, values=["income", "expense"], font=self.body)
-        self.cat_type_cb.grid(row=1, column=1, padx=5)
+        self.cat_type_cb = ttk.Combobox(form_cat, textvariable=self.cat_type_var, values=["income", "expense"], font=self.body, width=field_width)
+        self.cat_type_cb.grid(row=2, column=1, padx=5)
 
         self.cat_monthly_var = tk.BooleanVar()
-        tk.Checkbutton(form_cat, text="Μηνιαίο", font=self.body, variable=self.cat_monthly_var, bg=BG_PANEL, fg=FG_TEXT).grid(row=2, columnspan=2, pady=5)
+        tk.Checkbutton(form_cat, text="Μηνιαίο", font=self.body, variable=self.cat_monthly_var, bg=BG_PANEL, fg=FG_TEXT).grid(row=3, columnspan=2, pady=5)
 
         btn_frame = tk.Frame(form_cat, bg=BG_PANEL)
-        btn_frame.grid(row=3, columnspan=2, pady=10)
+        btn_frame.grid(row=4, columnspan=2, pady=10)
 
         # Δημιουργία κουμπιών
         self.cat_add_btn = tk.Button(btn_frame, text="Προσθήκη", bg=CRUD_BTN_BG, fg=CRUD_BTN_FG, font=self.body, bd=0)
