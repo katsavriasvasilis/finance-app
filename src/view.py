@@ -279,16 +279,15 @@ class MainWindow(tk.Tk):
         greek_flag_path = r"E:\Documents\Πανεπιστήμιο ΕΑΠ\Εργασία  ΠληΠΡΟ (2025)\finance-app\ρυθμίσεις\buttons_greek_english\gr.png"
         english_flag_path = r"E:\Documents\Πανεπιστήμιο ΕΑΠ\Εργασία  ΠληΠΡΟ (2025)\finance-app\ρυθμίσεις\buttons_greek_english\eng.png"
 
-        # Αυξάνουμε το μέγεθος των σημαιών
-        greek_flag = ImageTk.PhotoImage(Image.open(greek_flag_path).resize((60, 40)))  # Πλάτος 60, Ύψος 40
-        english_flag = ImageTk.PhotoImage(Image.open(english_flag_path).resize((60, 40)))  # Πλάτος 60, Ύψος 40
+        greek_flag = ImageTk.PhotoImage(Image.open(greek_flag_path).resize((60, 40)))
+        english_flag = ImageTk.PhotoImage(Image.open(english_flag_path).resize((60, 40)))
 
         greek_btn = tk.Button(flags_frame, image=greek_flag, command=lambda: self.change_language("greek"), bg=BG_PANEL, bd=0)
-        greek_btn.image = greek_flag  # Αποθήκευση αναφοράς για να μην χαθεί η εικόνα
+        greek_btn.image = greek_flag
         greek_btn.pack(side="left", padx=10)
 
         english_btn = tk.Button(flags_frame, image=english_flag, command=lambda: self.change_language("english"), bg=BG_PANEL, bd=0)
-        english_btn.image = english_flag  # Αποθήκευση αναφοράς για να μην χαθεί η εικόνα
+        english_btn.image = english_flag
         english_btn.pack(side="left", padx=10)
 
         # Ετικέτα για αλλαγή νομίσματος
@@ -305,6 +304,9 @@ class MainWindow(tk.Tk):
         ]
         currency_combobox.pack(anchor="n", pady=10)
         currency_combobox.current(0)
+
+        # Ετικέτα για εξαγωγή δεδομένων
+        tk.Label(settings_frame, text="Εξαγωγή Δεδομένων:", font=self.body, bg=BG_PANEL, fg=FG_TEXT).pack(anchor="n", pady=10)
 
         # Κουμπί για εξαγωγή δεδομένων
         export_button = tk.Button(settings_frame, text="Εξαγωγή ως", command=self._export_data, bg=BTN_BG, fg=BTN_FG, font=self.body)
