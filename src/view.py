@@ -26,6 +26,11 @@ class MainWindow(tk.Tk):
         style = ttk.Style(self)
         style.theme_use('clam')
         style.configure(
+            'Flat.TButton',
+            borderwidth=0,
+            highlightthickness=0
+        )
+        style.configure(
             'Custom.TCombobox',
             fieldbackground=ENTRY_BG,
             background=ENTRY_BG,
@@ -262,40 +267,43 @@ class MainWindow(tk.Tk):
         settings = self.frames["settings"]
         tk.Label(settings, text="Ρυθμίσεις", font=self.h1, bg=BG_PANEL, fg=FG_TEXT).pack(anchor="n", pady=20)
 
-        # Πλαίσιο για την αλλαγή γλώσσας
-        lang_frame = tk.Frame(settings, bg=BG_PANEL)
-        lang_frame.pack(anchor="n", pady=10)
-
-        tk.Label(lang_frame, text="Αλλαγή Γλώσσας:", font=self.body, bg=BG_PANEL, fg=FG_TEXT).grid(row=0, column=0, padx=10)
+        # Ετικέτα για αλλαγή γλώσσας
+        tk.Label(settings, text="Αλλαγή γλώσσας:", font=self.body, bg=BG_PANEL, fg=FG_TEXT).pack(anchor="n", pady=10)
 
         # Διαδρομές για τις σημαίες
-        greek_flag_path = r"E:\Documents\Πανεπιστήμιο ΕΑΠ\Εργασία  ΠληΠΡΟ (2025)\finance-app\assets\greece.png"
-        english_flag_path = r"E:\Documents\Πανεπιστήμιο ΕΑΠ\Εργασία  ΠληΠΡΟ (2025)\finance-app\assets\united-kingdom.png"
+        greek_flag_path = r"E:\Documents\Πανεπιστήμιο ΕΑΠ\Εργασία  ΠληΠΡΟ (2025)\finance-app\ρυθμίσεις\buttons_greek_english\gr.png"
+        english_flag_path = r"E:\Documents\Πανεπιστήμιο ΕΑΠ\Εργασία  ΠληΠΡΟ (2025)\finance-app\ρυθμίσεις\buttons_greek_english\eng.png"
 
-        # Κουμπιά για αλλαγή γλώσσας
-        greek_btn = self._create_button_with_flag(lang_frame, greek_flag_path, "greek")
-        english_btn = self._create_button_with_flag(lang_frame, english_flag_path, "english")
+        # Δημιουργία πλαισίου για τα κουμπιά
+        frame = tk.Frame(settings, bg=BG_PANEL, bd=1, relief="solid", highlightbackground="#B0B0B0", highlightthickness=1)  # Γκρι περίγραμμα
+        frame.pack(anchor="n", pady=20)
+
+        # Δημιουργία κουμπιών για αλλαγή γλώσσας
+        greek_btn = self._create_button_with_flag(frame, greek_flag_path, "greek")
+        english_btn = self._create_button_with_flag(frame, english_flag_path, "english")
 
         if greek_btn:
-            greek_btn.grid(row=0, column=1, padx=10)
+            greek_btn.grid(row=0, column=0, padx=20, pady=20)
         if english_btn:
-            english_btn.grid(row=0, column=2, padx=10)
+            english_btn.grid(row=0, column=1, padx=20, pady=20)
 
     def _create_button_with_flag(self, root, flag_path, language):
+        """Δημιουργεί κουμπί με σημαία για αλλαγή γλώσσας χωρίς περίγραμμα."""
         absolute_path = os.path.abspath(flag_path)
         if not os.path.exists(absolute_path):
             tk.messagebox.showerror("Σφάλμα", f"Το αρχείο {absolute_path} δεν βρέθηκε.")
             return None
 
         img = Image.open(absolute_path)
-        img = img.resize((50, 30), Image.Resampling.LANCZOS)
+        img = img.resize((50, 30), Image.Resampling.LANCZOS)  # Χρήση του LANCΖΟΣ για υψηλή ποιότητα
         photo = ImageTk.PhotoImage(img)
 
-        btn = ttk.Button(root, image=photo, command=lambda: self._change_language(language))
+        btn = ttk.Button(root, image=photo, command=lambda: self._change_language(language), style="Flat.TButton")
         btn.image = photo  # κρατάμε την αναφορά
         return btn
 
     def _change_language(self, language):
+        """Αλλάζει τη γλώσσα της εφαρμογής."""
         if language == "greek":
             tk.messagebox.showinfo("Αλλαγή Γλώσσας", "Το πρόγραμμα είναι τώρα στα Ελληνικά.")
         elif language == "english":
